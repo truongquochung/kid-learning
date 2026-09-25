@@ -40,9 +40,9 @@
         <button id="btnSoundToggle" class="btn-icon" title="Bật/Tắt Âm thanh" aria-label="Bật hoặc tắt âm thanh">
           <span id="soundIcon">🔊</span>
         </button>
-        <!-- Speech toggle -->
-        <button id="btnVoiceToggle" class="btn-icon" title="Bật/Tắt Giọng đọc" aria-label="Bật hoặc tắt giọng đọc">
-          <span id="voiceIcon">🗣️</span>
+        <!-- Speech toggle (hidden when voice is disabled) -->
+        <button id="btnVoiceToggle" class="btn-icon" title="Bật/Tắt Giọng đọc" aria-label="Bật hoặc tắt giọng đọc" style="display: none;">
+          <span id="voiceIcon">🤫</span>
         </button>
       </div>
     </header>
@@ -79,12 +79,12 @@
     <!-- Main Game Board -->
     <main class="game-board">
       
-      <!-- Audio & Instruction Banner -->
+      <!-- Instruction Banner -->
       <div class="instruction-banner" id="instructionBanner">
-        <button id="btnReplayAudio" class="btn-speak-prompt" title="Nghe lại câu hỏi">
-          <span class="speaker-wave">📢</span>
+        <div class="btn-speak-prompt" style="cursor: default;">
+          <span class="speaker-wave">🎯</span>
           <span id="instructionText">Bé hãy chọn dấu thích hợp: <b>Lớn hơn</b>, <b>Bé hơn</b> hay <b>Bằng</b>?</span>
-        </button>
+        </div>
       </div>
 
       <!-- Comparison Arena -->

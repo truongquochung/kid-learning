@@ -69,10 +69,87 @@
       this.playTone(180, 'sine', 0.15, 0.06, 0.4);
     }
 
+    playTinhTinh() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+
+      const t = this.ctx.currentTime;
+
+      const chime = (freq, startOffset, duration, volume = 0.3) => {
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t + startOffset);
+
+          const osc2 = this.ctx.createOscillator();
+          const gain2 = this.ctx.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(freq * 2.01, t + startOffset);
+
+          gain.gain.setValueAtTime(volume, t + startOffset);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + startOffset + duration);
+
+          gain2.gain.setValueAtTime(volume * 0.35, t + startOffset);
+          gain2.gain.exponentialRampToValueAtTime(0.001, t + startOffset + duration * 0.7);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc2.connect(gain2);
+          gain2.connect(this.ctx.destination);
+
+          osc.start(t + startOffset);
+          osc.stop(t + startOffset + duration);
+          osc2.start(t + startOffset);
+          osc2.stop(t + startOffset + duration);
+        } catch (e) {
+          console.warn('Audio play error:', e);
+        }
+      };
+
+      // 2 resonant, cheerful bell "Tinh ... Tinh!"
+      chime(1046.50, 0, 0.4, 0.35);        // "Tinh" 1 (C6)
+      chime(1318.51, 0.15, 0.55, 0.4);     // "Tinh" 2 (E6)
+    }
+
+    playTetTet() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+
+      const t = this.ctx.currentTime;
+
+      const buzz = (freq, startOffset, duration, volume = 0.25) => {
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, t + startOffset);
+          osc.frequency.linearRampToValueAtTime(freq * 0.85, t + startOffset + duration);
+
+          gain.gain.setValueAtTime(volume, t + startOffset);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + startOffset + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(t + startOffset);
+          osc.stop(t + startOffset + duration);
+        } catch (e) {
+          console.warn('Audio play error:', e);
+        }
+      };
+
+      // 2 snappy cartoon buzzes "Tẹt ... Tẹt!"
+      buzz(160, 0, 0.11, 0.25);         // "Tẹt" 1
+      buzz(135, 0.14, 0.13, 0.25);      // "Tẹt" 2
+    }
+
     playError() {
-      // Soft gentle boing sound
-      this.playTone(280, 'sine', 0.15, 0, 0.2);
-      this.playTone(200, 'sine', 0.25, 0.12, 0.2);
+      this.playTetTet();
     }
 
     playClick() {
@@ -80,21 +157,14 @@
     }
 
     playFanfare() {
-      // Victory fanfare
-      const melody = [
-        { f: 523.25, d: 0.15, t: 0 },
-        { f: 659.25, d: 0.15, t: 0.15 },
-        { f: 783.99, d: 0.15, t: 0.30 },
-        { f: 1046.50, d: 0.5, t: 0.45 }
-      ];
-      melody.forEach(m => this.playTone(m.f, 'triangle', m.d, m.t, 0.3));
+      this.playTinhTinh();
     }
   }
 
-  // --- Voice Over Engine (Web Speech API + High Quality Fallback) ---
+  // --- Voice Over Engine (Disabled as requested) ---
   class SpeechEngine {
     constructor() {
-      this.enabled = true;
+      this.enabled = false; // Tạm thời tắt voice đọc tiếng
       this.currentAudio = null;
       this.vietnameseVoice = null;
       this.initVoices();
@@ -354,11 +424,13 @@
         this.renderVisualCounters();
       });
 
-      // Replay Audio Prompt
-      this.btnReplayAudio.addEventListener('click', () => {
-        this.sound.init();
-        this.promptCurrentQuestion();
-      });
+      // Replay Audio Prompt (if present)
+      if (this.btnReplayAudio) {
+        this.btnReplayAudio.addEventListener('click', () => {
+          this.sound.init();
+          this.promptCurrentQuestion();
+        });
+      }
 
       // Sign buttons click & touch
       this.signButtons.forEach(btn => {
@@ -491,9 +563,7 @@
     }
 
     promptCurrentQuestion() {
-      const promptText = `Bé hãy so sánh số ${this.numLeft} và số ${this.numRight} nhé!`;
       this.instructionTextEl.innerHTML = `Bé hãy so sánh số <b>${this.numLeft}</b> và số <b>${this.numRight}</b>:`;
-      this.speech.speak(promptText);
     }
 
     handleAnswer(chosenSign) {
@@ -528,28 +598,21 @@
       this.score += 1;
       this.streak += 1;
 
-      // Haptic & Sound
+      // Haptic & Sound (Tiếng Tinh Tinh vui tai)
       this.vibrate([40, 50, 70]);
-      this.sound.playAlligatorChomp();
-      setTimeout(() => this.sound.playSuccess(), 120);
+      this.sound.playTinhTinh();
 
       // Slot visual effect
       this.centerSlotEl.className = 'center-slot correct-glow';
       this.feedbackBubbleEl.className = 'feedback-bubble success';
 
-      let readSentence = '';
       if (sign === '>') {
-        readSentence = `${this.numLeft} lớn hơn ${this.numRight}! Cá sấu há to bên trái!`;
         this.feedbackTextEl.textContent = `🎉 Đúng rồi! ${this.numLeft} LỚN HƠN ${this.numRight}`;
       } else if (sign === '<') {
-        readSentence = `${this.numLeft} bé hơn ${this.numRight}! Cá sấu há to bên phải!`;
         this.feedbackTextEl.textContent = `🎉 Chuẩn luôn! ${this.numLeft} BÉ HƠN ${this.numRight}`;
       } else {
-        readSentence = `${this.numLeft} bằng ${this.numRight}! Hai bên bằng nhau!`;
         this.feedbackTextEl.textContent = `🎉 Tuyệt vời! ${this.numLeft} BẰNG ${this.numRight}`;
       }
-
-      this.speech.speak(`Chính xác! ${readSentence}`);
 
       // Small confetti burst if streak >= 3
       if (this.streak >= 3) {
@@ -566,13 +629,14 @@
         } else {
           this.showVictoryModal();
         }
-      }, 2000);
+      }, 1600);
     }
 
     handleWrongAnswer(sign) {
       this.streak = 0;
+      // Haptic & Sound (Tiếng Tẹt Tẹt)
       this.vibrate([70, 50, 70]);
-      this.sound.playError();
+      this.sound.playTetTet();
 
       // Slot shake visual effect
       this.centerSlotEl.className = 'center-slot wrong-shake';
@@ -637,7 +701,6 @@
       this.awardTitleEl.textContent = title;
 
       this.victoryModal.style.display = 'flex';
-      this.speech.speak(`Hoan hô bé! Bé đã hoàn thành xuất sắc bài học với ${this.score} điểm!`);
     }
   }
 
