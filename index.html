@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bé Học So Sánh Số 1-10 | Toán Vui Mầm Non & Lớp 1</title>
+  
+  <!-- Google Fonts: Fredoka & Baloo 2 for kid-friendly playful typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@400;600;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background floating decorations -->
+  <div class="bg-decorations" aria-hidden="true">
+    <div class="cloud cloud-1">☁️</div>
+    <div class="cloud cloud-2">☁️</div>
+    <div class="cloud cloud-3">🌤️</div>
+    <div class="balloon balloon-1">🎈</div>
+    <div class="balloon balloon-2">🎈</div>
+    <div class="star-deco star-1">✨</div>
+    <div class="star-deco star-2">⭐</div>
+  </div>
+
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="logo-group">
+        <span class="logo-icon">🐊</span>
+        <div class="logo-text">
+          <h1 class="title">Bé Học So Sánh Số</h1>
+          <span class="subtitle">Bé 5–6 tuổi • Tập làm quen số 1 đến 10</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Sound toggle -->
+        <button id="btnSoundToggle" class="btn-icon" title="Bật/Tắt Âm thanh" aria-label="Bật hoặc tắt âm thanh">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <!-- Speech toggle -->
+        <button id="btnVoiceToggle" class="btn-icon" title="Bật/Tắt Giọng đọc" aria-label="Bật hoặc tắt giọng đọc">
+          <span id="voiceIcon">🗣️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Score & Progress Bar -->
+    <section class="game-status-bar">
+      <!-- Star / Score -->
+      <div class="score-badge">
+        <span class="star-icon">⭐</span>
+        <span class="score-count" id="starCount">0</span>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-wrapper">
+        <div class="progress-info">
+          <span>Câu hỏi: <b id="currentQuestionNum">1</b>/<span id="totalQuestionsNum">10</span></span>
+          <span class="streak-badge" id="streakBadge" style="display:none;">🔥 Đúng <b>1</b> câu liên tiếp!</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill" style="width: 10%;"></div>
+          <div class="progress-avatar" id="progressAvatar" style="left: 10%;">🚀</div>
+        </div>
+      </div>
+
+      <!-- Mode selection / Helper switch -->
+      <div class="helper-toggle-wrapper">
+        <button id="btnToggleHelp" class="btn-helper active" title="Bật / Tắt hình đếm đồ vật">
+          <span class="helper-icon">🍎</span>
+          <span class="helper-text">Đếm đồ vật: <b>BẬT</b></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Game Board -->
+    <main class="game-board">
+      
+      <!-- Audio & Instruction Banner -->
+      <div class="instruction-banner" id="instructionBanner">
+        <button id="btnReplayAudio" class="btn-speak-prompt" title="Nghe lại câu hỏi">
+          <span class="speaker-wave">📢</span>
+          <span id="instructionText">Bé hãy chọn dấu thích hợp: <b>Lớn hơn</b>, <b>Bé hơn</b> hay <b>Bằng</b>?</span>
+        </button>
+      </div>
+
+      <!-- Comparison Arena -->
+      <div class="arena-container">
+        
+        <!-- Left Number Card -->
+        <div class="num-card-wrapper">
+          <div class="num-card" id="cardLeft" style="--card-color: #4ECDC4;">
+            <div class="num-display" id="numLeft">5</div>
+            <div class="items-grid" id="itemsLeft">
+              <!-- Visual counting items dynamically inserted -->
+            </div>
+          </div>
+          <div class="card-label">Bên trái</div>
+        </div>
+
+        <!-- Center Target Slot (The Alligator Mouth / Sign Placeholder) -->
+        <div class="center-slot-wrapper">
+          <div class="center-slot" id="centerSlot">
+            <!-- Default placeholder or dropped sign -->
+            <div class="slot-placeholder" id="slotPlaceholder">?</div>
+            <div class="alligator-mascot" id="alligatorMascot">
+              <!-- SVG Alligator or Emoji Animation -->
+            </div>
+          </div>
+          <div class="feedback-bubble" id="feedbackBubble">
+            <span id="feedbackText">Bé chọn dấu nào nè?</span>
+          </div>
+        </div>
+
+        <!-- Right Number Card -->
+        <div class="num-card-wrapper">
+          <div class="num-card" id="cardRight" style="--card-color: #FF6B6B;">
+            <div class="num-display" id="numRight">8</div>
+            <div class="items-grid" id="itemsRight">
+              <!-- Visual counting items dynamically inserted -->
+            </div>
+          </div>
+          <div class="card-label">Bên phải</div>
+        </div>
+
+      </div>
+
+      <!-- Choice Buttons (The 3 signs) -->
+      <div class="action-section">
+        <div class="action-title">Bé hãy bấm chọn hoặc kéo dấu vào ô giữa:</div>
+        
+        <div class="signs-container">
+          <!-- Greater than sign (>) -->
+          <button class="sign-btn sign-greater" data-sign=">" id="btnSignGreater" draggable="true">
+            <div class="sign-symbol">&gt;</div>
+            <div class="sign-mascot">🐊➡️</div>
+            <div class="sign-name">LỚN HƠN</div>
+            <div class="sign-tip">Cá sấu há sang trái</div>
+          </button>
+
+          <!-- Equal sign (=) -->
+          <button class="sign-btn sign-equal" data-sign="=" id="btnSignEqual" draggable="true">
+            <div class="sign-symbol">=</div>
+            <div class="sign-mascot">🐸🤝</div>
+            <div class="sign-name">BẰNG NHAU</div>
+            <div class="sign-tip">Hai bên như nhau</div>
+          </button>
+
+          <!-- Less than sign (<) -->
+          <button class="sign-btn sign-less" data-sign="<" id="btnSignLess" draggable="true">
+            <div class="sign-symbol">&lt;</div>
+            <div class="sign-mascot">⬅️🐊</div>
+            <div class="sign-name">BÉ HƠN</div>
+            <div class="sign-tip">Cá sấu há sang phải</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Rule Reminder for Kids -->
+      <div class="mnemonic-box">
+        <span class="mnemonic-icon">💡</span>
+        <span class="mnemonic-text">
+          <b>Bí kíp cá sấu:</b> Chú Cá Sấu rất háu ăn nên luôn há to miệng về phía <b>SỐ LỚN HƠN</b> nhé!
+        </span>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>Trò chơi Toán học tương tác dành cho Bé chuẩn bị vào Lớp 1 ❤️</span>
+    </footer>
+  </div>
+
+  <!-- Win / End Game Modal -->
+  <div class="modal-overlay" id="victoryModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-confetti-header">🎉 🏆 🎉</div>
+      <h2 class="modal-title">HOAN HÔ BÉ YÊU!</h2>
+      <p class="modal-desc">Bé đã hoàn thành xuất sắc chặng so sánh số 1 - 10!</p>
+      
+      <!-- Stars Awarded -->
+      <div class="modal-stars" id="modalStars">
+        <span class="star-burst">⭐</span>
+        <span class="star-burst">⭐</span>
+        <span class="star-burst">⭐</span>
+      </div>
+
+      <div class="modal-score-summary">
+        <div>Bé đạt được: <b id="finalScore">10/10</b> điểm</div>
+        <div class="badge-title">🏅 Danh hiệu: <span id="awardTitle">Thần Đồng Toán Học</span></div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btnPlayAgain" class="btn-primary-play">
+          <span>🔄</span> Chơi Lại Vòng Mới
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <script src="app.js"></script>
+</body>
+</html>
