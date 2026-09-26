@@ -9,11 +9,19 @@
   // --- Theme Emojis for Visual Counting (Cute, recognizable animals & icons) ---
   const COUNT_EMOJIS = ['🐶', '🐱', '🐰', '🐼', '🐻', '🦁', '🐸', '🐥', '🐬', '🐧', '🐘', '🦊', '🐯', '🐵', '🦄', '🐙', '🐢', '🐞', '🍎', '⭐', '🍓'];
 
-  // --- Sound Synthesizer via Web Audio API (No external assets required) ---
+  // --- Sound Synthesizer & Audio Engine ---
   class SoundEngine {
     constructor() {
       this.ctx = null;
       this.enabled = true;
+      this.currentAudio = null;
+      this.sequenceTimer = null;
+
+      // Preload audio files
+      this.audioCorrect = new Audio('sound/correct.mp3');
+      this.audioIncorrect = new Audio('sound/incorect.mp3');
+      this.audioCorrect.preload = 'auto';
+      this.audioIncorrect.preload = 'auto';
     }
 
     init() {
@@ -25,6 +33,20 @@
       }
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume();
+      }
+    }
+
+    stopAudio() {
+      if (this.sequenceTimer) {
+        clearTimeout(this.sequenceTimer);
+        this.sequenceTimer = null;
+      }
+      if (this.currentAudio) {
+        try {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+        } catch (e) {}
+        this.currentAudio = null;
       }
     }
 
@@ -148,8 +170,50 @@
       buzz(135, 0.14, 0.13, 0.25);      // "Tẹt" 2
     }
 
-    playError() {
+    // Sequence: Tinh Tinh -> Phát correct.mp3
+    playCorrectSequence() {
+      if (!this.enabled) return;
+      this.stopAudio();
+
+      // 1. Phát Tinh Tinh trước
+      this.playTinhTinh();
+
+      // 2. Phát âm thanh sound/correct.mp3 sau tiếng Tinh Tinh (~420ms)
+      this.sequenceTimer = setTimeout(() => {
+        if (!this.enabled) return;
+        try {
+          this.audioCorrect.currentTime = 0;
+          this.currentAudio = this.audioCorrect;
+          this.audioCorrect.play().catch(e => console.warn('Audio play error:', e));
+        } catch (e) {
+          console.warn('Audio error:', e);
+        }
+      }, 420);
+    }
+
+    // Sequence: Tẹt Tẹt -> Phát incorect.mp3
+    playIncorrectSequence() {
+      if (!this.enabled) return;
+      this.stopAudio();
+
+      // 1. Phát Tẹt Tẹt trước
       this.playTetTet();
+
+      // 2. Phát âm thanh sound/incorect.mp3 sau tiếng Tẹt Tẹt (~350ms)
+      this.sequenceTimer = setTimeout(() => {
+        if (!this.enabled) return;
+        try {
+          this.audioIncorrect.currentTime = 0;
+          this.currentAudio = this.audioIncorrect;
+          this.audioIncorrect.play().catch(e => console.warn('Audio play error:', e));
+        } catch (e) {
+          console.warn('Audio error:', e);
+        }
+      }, 350);
+    }
+
+    playError() {
+      this.playIncorrectSequence();
     }
 
     playClick() {
@@ -157,7 +221,7 @@
     }
 
     playFanfare() {
-      this.playTinhTinh();
+      this.playCorrectSequence();
     }
   }
 
@@ -402,6 +466,9 @@
       // Audio Toggles
       this.btnSoundToggle.addEventListener('click', () => {
         this.sound.enabled = !this.sound.enabled;
+        if (!this.sound.enabled) {
+          this.sound.stopAudio();
+        }
         this.btnSoundToggle.querySelector('#soundIcon').textContent = this.sound.enabled ? '🔊' : '🔇';
         this.sound.playClick();
       });
@@ -508,6 +575,7 @@
 
     loadQuestion() {
       this.isLocked = false;
+      this.sound.stopAudio();
       this.generateNumbers();
 
       // Update numbers
@@ -598,9 +666,9 @@
       this.score += 1;
       this.streak += 1;
 
-      // Haptic & Sound (Tiếng Tinh Tinh vui tai)
+      // Haptic & Sound (Tiếng Tinh Tinh -> Tiếp nối sound/correct.mp3)
       this.vibrate([40, 50, 70]);
-      this.sound.playTinhTinh();
+      this.sound.playCorrectSequence();
 
       // Slot visual effect
       this.centerSlotEl.className = 'center-slot correct-glow';
@@ -621,7 +689,7 @@
 
       this.updateStatusUI();
 
-      // Proceed to next question after animation
+      // Proceed to next question after audio finish (~2.9s)
       setTimeout(() => {
         if (this.currentQuestionIndex < this.totalQuestions) {
           this.currentQuestionIndex += 1;
@@ -629,22 +697,19 @@
         } else {
           this.showVictoryModal();
         }
-      }, 1600);
+      }, 2900);
     }
 
     handleWrongAnswer(sign) {
       this.streak = 0;
-      // Haptic & Sound (Tiếng Tẹt Tẹt)
+      // Haptic & Sound (Tiếng Tẹt Tẹt -> Tiếp nối sound/incorect.mp3)
       this.vibrate([70, 50, 70]);
-      this.sound.playTetTet();
+      this.sound.playIncorrectSequence();
 
       // Slot shake visual effect
       this.centerSlotEl.className = 'center-slot wrong-shake';
       this.feedbackBubbleEl.className = 'feedback-bubble error';
       this.feedbackTextEl.textContent = 'Ồ, chưa đúng rồi! Bé thử lại nhé!';
-
-      // Gentle voice encouraging
-      this.speech.speak(`Ồ, chưa đúng rồi! Bé hãy đếm lại đồ vật xem số nào to hơn nhé!`);
 
       // Auto turn on counters helper if not already on
       if (!this.showCounters) {
